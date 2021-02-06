@@ -1,33 +1,27 @@
-{-# LANGUAGE CPP #-}
+module Main (main) where
 
-module Main where
-
-import Control.Monad
-import Data.List
-import System.Directory
-import System.Environment
+import SimpleCmd
+import SimpleCmdArgs
 import System.FilePath
 
+import Paths_lsfrom (version)
+
 main :: IO ()
-main = do
-  args <- getArgs
-  case args of
-    [start] -> do
-      let (dir,pat) = splitFileName start
-      files <- sort <$> listDirectory dir
-      mapM_ (printFrom (render dir) pat) files
-    _ -> error' "missing file pattern\n\nUsage: lsfrom [FILEPAT]"
+main =
+  simpleCmdArgs (Just version) "List files from pattern"
+  "lsfrom lists the files in a directory that follow from the given pattern" $
+  lsfrom <$> switchWith 'a' "all" "include hidden (dot) files" <*> strArg "FILEPAT"
+
+lsfrom :: Bool -> FilePath -> IO ()
+lsfrom hidden file = do
+  let isdir = last file == pathSeparator
+      file' = if isdir then takeDirectory file else file
+      (dir,pat) = splitFileName file'
+      pat' = pat ++ if isdir then [pathSeparator] else ""
+  sorted <- do
+    files <- cmd "ls" $ ["-a" | hidden || head pat == '.'] ++ [dir]
+    lines <$> cmdStdIn "sort" [] (pat' ++ "\n" ++ files)
+  let result = tail $ dropWhile (pat' /=) sorted
+  mapM_ (putStrLn . (renderDir dir </>)) result
   where
-    render dir = if dir == "./" then "" else dir
-
-printFrom :: FilePath -> String -> String -> IO ()
-printFrom dir start f =
-  when (f >= start) $ putStrLn $ dir </> f
-
--- from simple-cmd
-error' :: String -> a
-#if (defined(MIN_VERSION_base) && MIN_VERSION_base(4,9,0))
-error' = errorWithoutStackTrace
-#else
-error' = error
-#endif
+    renderDir dir = if dir == "./" then "" else dir
