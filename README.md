@@ -20,3 +20,7 @@ $ lsfrom /sy
 
 This may be useful for continuing a script on the files in a dir
 after a failure, etc.
+
+## Installation
+
+`stack install lsfrom` or `cabal install lsfrom`.
