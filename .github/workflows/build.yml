@@ -30,5 +30,4 @@ jobs:
             ${{ runner.os }}-
       - run: cabal update
       - run: cabal build
-      - run: cabal test
       - run: cabal sdist
