@@ -28,6 +28,7 @@ source-repository head
 executable lsfrom
   main-is:             Main.hs
   build-depends:       base < 5,
-                       directory >= 1.2.5.0
+                       directory >= 1.2.5.0,
+                       filepath
   default-language:    Haskell2010
   ghc-options:        -fwarn-missing-signatures -Wall
