@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module Main where
 
 import Control.Monad
@@ -14,10 +16,18 @@ main = do
       let (dir,pat) = splitFileName start
       files <- sort <$> listDirectory dir
       mapM_ (printFrom (render dir) pat) files
-    _ -> error "Usage: lsfrom [FILE]"
+    _ -> error' "missing file pattern\n\nUsage: lsfrom [FILEPAT]"
   where
     render dir = if dir == "./" then "" else dir
 
 printFrom :: FilePath -> String -> String -> IO ()
 printFrom dir start f =
   when (f >= start) $ putStrLn $ dir </> f
+
+-- from simple-cmd
+error' :: String -> a
+#if (defined(MIN_VERSION_base) && MIN_VERSION_base(4,9,0))
+error' = errorWithoutStackTrace
+#else
+error' = error
+#endif
