@@ -1,13 +1,13 @@
 name:                lsfrom
 version:             0.1
-synopsis:            List dir files starting from a specific name
+synopsis:            List directory files starting from a specific name
 description:
             `lsfrom` lists files in a directory that start with
             a particular sequence of characters and those after it
             with respect to locale collation.
 
-            This can be useful for continuing a script on the files in a dir
-            after a failure, etc.
+            This can be useful for example for continuing a command or script
+            on the files in a directory after a failure.
 license:             BSD3
 license-file:        LICENSE
 author:              Jens Petersen <petersen@redhat.com>
