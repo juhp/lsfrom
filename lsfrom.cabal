@@ -60,3 +60,4 @@ test-suite test
                , directory
                , filepath
                , simple-cmd
+  build-tools:   lsfrom
