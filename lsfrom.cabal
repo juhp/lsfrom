@@ -61,3 +61,5 @@ test-suite test
                , filepath
                , simple-cmd
   build-tools:   lsfrom
+  if impl(ghc < 8.0)
+    buildable:     False
