@@ -62,7 +62,7 @@ test-suite test
   build-depends: base >= 4 && < 5
                , directory >= 1.2.3.0
                , filepath
-               , simple-cmd
+               , simple-cmd >= 0.1.1
   build-tools:   lsfrom
   if impl(ghc < 8.0)
     buildable:     False

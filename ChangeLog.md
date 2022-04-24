@@ -2,6 +2,7 @@
 
 ## 0.1.1.1 (2022-04-24)
 - add missing test files
+- fix testsuite for lts 12 and earlier
 
 ## 0.1.1 (2022-04-24)
 - use `ls -A`
