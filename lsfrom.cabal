@@ -1,5 +1,5 @@
 name:                lsfrom
-version:             0.1.1
+version:             0.1.1.1
 synopsis:            List directory files starting from a specific name
 description:
             `lsfrom` lists the contents of a directory starting from
@@ -20,6 +20,9 @@ build-type:          Simple
 cabal-version:       1.18
 extra-doc-files:     ChangeLog.md
                      README.md
+extra-source-files:  test/files/A
+                     test/files/B
+                     test/files/C
 
 source-repository head
   type:                git

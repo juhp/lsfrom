@@ -3,7 +3,7 @@ import SimpleCmd
 import System.Directory
 
 lsfrom :: (FilePath, String, [String]) -> IO ()
-lsfrom (dir, arg,expect) = do
+lsfrom (dir, arg, expect) = do
   out <- withCurrentDirectory dir $
          cmdLines "lsfrom" [arg]
   unless (out == expect) $ do

@@ -1,5 +1,8 @@
 # Release history for lsfrom
 
+## 0.1.1.1 (2022-04-24)
+- add missing test files
+
 ## 0.1.1 (2022-04-24)
 - use `ls -A`
 - improve documentation
