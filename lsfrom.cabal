@@ -1,18 +1,18 @@
 name:                lsfrom
-version:             0.1
+version:             0.1.1
 synopsis:            List directory files starting from a specific name
 description:
-            `lsfrom` lists files in a directory that start with
-            a particular sequence of characters and those after it
+            `lsfrom` lists the contents of a directory starting from
+            a particular prefix and those files after it
             with respect to locale collation.
 
             This can be useful for example for continuing a command or script
-            on the files in a directory after a failure.
+            in a directory after a failure.
 license:             BSD3
 license-file:        LICENSE
 author:              Jens Petersen <petersen@redhat.com>
 maintainer:          Jens Petersen <petersen@redhat.com>
-copyright:           2018,2021  Jens Petersen
+copyright:           2018,2021-2022  Jens Petersen
 category:            Utility
 homepage:            https://github.com/juhp/lsfrom
 bug-reports:         https://github.com/juhp/lsfrom/issues
