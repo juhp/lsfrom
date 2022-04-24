@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 import Control.Monad
 import SimpleCmd
 import System.Directory
@@ -22,3 +24,12 @@ main :: IO ()
 main = do
   mapM_ lsfrom tests
   putStrLn $ show (length tests) ++ " tests run"
+
+#if !MIN_VERSION_simple_cmd(0,1,4)
+error' :: String -> a
+#if MIN_VERSION_base(4,9,0)
+error' = errorWithoutStackTrace
+#else
+error' = error
+#endif
+#endif
