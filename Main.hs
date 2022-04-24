@@ -19,7 +19,7 @@ lsfrom hidden file = do
       (dir,pat) = splitFileName file'
       pat' = pat ++ if isdir then [pathSeparator] else ""
   sorted <- do
-    files <- cmd "ls" $ ["-a" | hidden || head pat == '.'] ++ [dir]
+    files <- cmd "ls" $ ["-A" | hidden || head pat == '.'] ++ [dir]
     lines <$> cmdStdIn "sort" [] (pat' ++ "\n" ++ files)
   let result = tail $ dropWhile (pat' /=) sorted
   mapM_ (putStrLn . (renderDir dir </>)) result
