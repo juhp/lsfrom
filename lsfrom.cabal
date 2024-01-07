@@ -1,5 +1,6 @@
+cabal-version:       2.0
 name:                lsfrom
-version:             0.1.1.1
+version:             1.0.0
 synopsis:            List directory files starting from a specific name
 description:
             `lsfrom` lists the contents of a directory starting from
@@ -12,12 +13,11 @@ license:             BSD3
 license-file:        LICENSE
 author:              Jens Petersen <petersen@redhat.com>
 maintainer:          Jens Petersen <petersen@redhat.com>
-copyright:           2018,2021-2022  Jens Petersen
+copyright:           2018,2021-2024  Jens Petersen
 category:            Utility
 homepage:            https://github.com/juhp/lsfrom
 bug-reports:         https://github.com/juhp/lsfrom/issues
 build-type:          Simple
-cabal-version:       1.18
 extra-doc-files:     ChangeLog.md
                      README.md
 extra-source-files:  test/files/A
@@ -31,10 +31,12 @@ source-repository head
 executable lsfrom
   main-is:             Main.hs
   other-modules:       Paths_lsfrom
+  autogen-modules:     Paths_lsfrom
   build-depends:       base < 5,
                        filepath,
-                       simple-cmd,
-                       simple-cmd-args >= 0.1.1
+                       safe,
+                       simple-cmd >= 0.1.4,
+                       simple-cmd-args >= 0.1.2
   default-language:    Haskell2010
   ghc-options:        -fwarn-missing-signatures -Wall
   if impl(ghc >= 8.0)
@@ -63,4 +65,4 @@ test-suite test
                , directory >= 1.2.3.0
                , filepath
                , simple-cmd >= 0.1.1
-  build-tools:   lsfrom
+  build-tool-depends:   lsfrom:lsfrom
