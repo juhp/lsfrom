@@ -10,14 +10,14 @@ import Paths_lsfrom (version)
 
 main :: IO ()
 main =
-  simpleCmdArgs (Just version) "List files from pattern"
-  "lsfrom lists the files in a directory that follow from the given pattern" $
+  simpleCmdArgs (Just version) "List directories files starting from file"
+  "lsfrom lists the files in a directory that follow from the given file" $
   lsfrom
   <$> switchWith 's' "strict" "fail if specified file(s) do not exist"
   <*> switchWith 'A' "all" "include hidden (dot) files"
   <*> switchWith 'a' "after" "files after STARTFILE [default: from STARTFILE]"
   <*> optional (removeTrailing <$> strOptionWith 'u' "until" "LASTFILE" "files until FILE")
-  <*> switchWith 'b' "before" "files before LASTFILE [default: until LASTFILE]"
+  <*> switchWith 'b' "before" "files before LASTFILE (only affects --until)"
   <*> (removeTrailing <$> strArg "STARTFILE")
   where
     removeTrailing "" = ""
