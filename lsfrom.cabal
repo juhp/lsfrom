@@ -4,8 +4,7 @@ version:             1.0
 synopsis:            List directory files starting from a specific name
 description:
             `lsfrom` lists the entries of a directory starting from
-            a particular file and then the files after it
-            with respect to locale collation ordering.
+            a particular file in locale collation order.
 
             This can be useful for example for continuing a command or script
             in a directory after a failure.
