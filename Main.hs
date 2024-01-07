@@ -37,10 +37,7 @@ lsfrom strict hidden after muntil before file =
       lsout <- cmd "ls" $
                  ["-A" | hidden || e == '.'] ++ [dir | not (null dir)]
       let lsEntries = lines lsout
-      whenJust muntil $ \until' -> do
-        when (strict && until' `notElem` lsEntries) $
-          error' $ until' +-+ "not found in directory" +-+ dir
-      let entryExists = entry `elem` lsEntries
+          entryExists = entry `elem` lsEntries
           muntilExists =
             case muntil of
               Nothing -> Nothing
@@ -49,10 +46,7 @@ lsfrom strict hidden after muntil before file =
       listingWith <-
         lines <$>
         if strict
-        then do
-          unless entryExists $
-            error' $ entry +-+ "not found in directory" +-+ dir
-          return lsout
+        then return lsout
         else if entryExists
              then case muntilExists of
                     Just (until',False) ->
