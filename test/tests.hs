@@ -18,18 +18,18 @@ lsfrom (dir, args, expect) = do
 
 tests :: [Test]
 tests =
-  [ ("test/files", ["B"], ["B","C"])
+  [ ("test/files", ["-f", "B"], ["B","C"])
   , ("test/files", ["-a", "B"], ["C"])
-  , ("test", ["files/C/"], ["files/C"])
-  , ("test/files", ["Bb"], ["C"])
-  , ("test/files", ["-u", "B", "A"], ["A", "B"])
-  , ("test/files", ["-u", "C", "-b", "A"], ["A", "B"])
-  , ("test/files", ["-u", "C", "-b", "-a", "A"], ["B"])
-  , ("test/files", ["-u", "A", "-b", "-a", "C"], [])
-  , ("test/files", ["-u", "B", "-b", "B"], [])
+  , ("test", ["-f", "files/C/"], ["files/C"])
+  , ("test/files", ["-f", "Bb"], ["C"])
+  , ("test/files", ["-u", "B", "-f", "A"], ["A", "B"])
+  , ("test/files", ["-b", "C", "-f", "A"], ["A", "B"])
+  , ("test/files", ["-b", "C", "-a", "A"], ["B"])
+  , ("test/files", ["-b", "A", "-a", "C"], [])
+  , ("test/files", ["-b", "B", "-f", "B"], [])
   , ("test/files", ["-u", "B", "-a", "B"], [])
-  , ("test/files", ["-u", "B", "-a", "-b", "B"], [])
-  , ("test/files", ["-s", "-u", "B", "A"], ["A", "B"])
+  , ("test/files", ["-b", "B", "-a", "B"], [])
+--  , ("test/files", ["-s", "-u", "B", "-f", "A"], ["A", "B"])
   ]
 
 main :: IO ()

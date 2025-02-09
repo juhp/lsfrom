@@ -1,83 +1,93 @@
 module Main (main) where
 
-import Data.List (dropWhileEnd)
-import SimpleCmd
+import Data.List.Extra (dropWhileEnd, unsnoc)
+import qualified Data.List.NonEmpty as NE
+import Data.Maybe (maybeToList)
+import SimpleCmd (cmdLines)
 import SimpleCmdArgs
-import Safe (tailSafe)
 import System.FilePath
 
 import Paths_lsfrom (version)
+
+data IncludeExclude a = Include a | Exclude a
+
+unIncludeExclue :: IncludeExclude a -> a
+unIncludeExclue (Include x) = x
+unIncludeExclue (Exclude x) = x
+
+type NEString = NE.NonEmpty Char
+
+showFile :: IncludeExclude NEString -> String
+showFile = NE.toList . unIncludeExclue
 
 main :: IO ()
 main =
   simpleCmdArgs (Just version) "List directories files starting from file"
   "lsfrom lists the files in a directory that follow from the given file" $
-  lsfrom
-  <$> switchWith 's' "strict" "fail if specified file(s) do not exist"
-  <*> switchWith 'A' "all" "include hidden (dot) files"
-  <*> switchWith 'a' "after" "files after STARTFILE [default: from STARTFILE]"
-  <*> optional (removeTrailing <$> strOptionWith 'u' "until" "LASTFILE" "files until FILE")
-  <*> switchWith 'b' "before" "files before LASTFILE (only affects --until)"
-  <*> (removeTrailing <$> strArg "STARTFILE")
+  lsfrom False
+--  <$> switchWith 's' "strict" "fail if specified file(s) do not exist"
+  <$> switchWith 'A' "all" "include hidden (dot) files"
+  <*> optional
+  (Include <$> optionWith (maybeReader readNonEmpty) 'f' "from" "STARTFILE" "files from STARTFILE" <|>
+   Exclude <$> optionWith (maybeReader readNonEmpty) 'a' "after" "STARTFILE" "files after STARTFILE")
+  <*> optional
+  (Include <$> optionWith (maybeReader readNonEmpty) 'u' "until" "LASTFILE" "files until LASTFILE" <|>
+   Exclude <$> optionWith (maybeReader readNonEmpty) 'b' "before" "LASTFILE" "files before LASTFILE")
   where
-    removeTrailing "" = ""
-    removeTrailing "/" = "/"
     removeTrailing f =
-      if last f == '/'
-      then removeTrailing $ init f
-      else f
+      if f == "/"
+      then "/"
+      else dropWhileEnd (== '/') f
 
-lsfrom :: Bool -> Bool -> Bool -> Maybe FilePath -> Bool -> FilePath -> IO ()
-lsfrom strict hidden after muntil before file =
-  case reverse (splitDirectories file) of
-    [] -> error' "empty filename!"
-    ("":_) -> error' "empty filename!"
-    (entry@(e:_):revdir) -> do
-      let dir = joinPath $ reverse revdir
-      lsout <- cmd "ls" $
-                 ["-A" | hidden || e == '.'] ++ [dir | not (null dir)]
-      let lsEntries = lines lsout
-          entryExists = entry `elem` lsEntries
-          muntilExists =
-            case muntil of
-              Nothing -> Nothing
-              Just until' ->
-                Just (until', until' `elem` lsEntries)
-      listingWith <-
-        lines <$>
-        if strict
-        then return lsout
-        else if entryExists
-             then case muntilExists of
-                    Just (until',False) ->
-                      sortLs $ prepend until' lsout
-                    _ -> return lsout
-             else case muntilExists of
-                    Just (until',False) ->
-                      sortLs $
-                      if entry == until'
-                      then prepend entry lsout
-                      else prepend entry $ prepend until' lsout
-                    _ -> sortLs $ prepend entry lsout
-      let result =
-            takeUntil muntilExists $
-            (if after || not entryExists then tailSafe else id) $
-            dropWhile (entry /=) listingWith
-      mapM_ (putStrLn . (renderDir dir </>)) result
+    readNonEmpty = NE.nonEmpty . removeTrailing
+
+-- FIXME make strict mean existence?
+lsfrom :: Bool -> Bool -> Maybe (IncludeExclude NEString)
+       -> Maybe (IncludeExclude NEString) -> IO ()
+lsfrom _strict hidden mstart mlast = do
+  let dirarg = maybe [] (maybeToList . fst . mdirfile) mstart
+      showhidden = hidden || fmap (NE.head . unIncludeExclue) mstart == Just '.'
+  listing <- cmdLines "ls" $ ["-A" | showhidden] ++ dirarg
+  let result = takeLast $ dropStart listing
+  mapM_ (putStrLn . (renderDir </>)) result
   where
-    renderDir dir = if dir == "./" then "" else dir
+    mdirfile :: IncludeExclude NEString -> (Maybe FilePath, FilePath)
+    mdirfile ie =
+        case splitFileName $ showFile ie of
+          (d,f) ->
+            let mdir = if d == "./" then Nothing else Just d
+            in (mdir,f)
 
-    sortLs :: String -> IO String
-    sortLs = cmdStdIn "sort" []
+    dropStart :: [FilePath] -> [FilePath]
+    dropStart files =
+      case mstart of
+        Nothing -> files
+        Just start ->
+          case mdirfile start of
+            (_,file) ->
+              case dropWhile (< file) files of
+                [] -> []
+                sf@(f:fs) ->
+                  case start of
+                    Include _ -> sf
+                    Exclude e -> if f == NE.toList e then fs else sf
 
-    prepend :: String -> String -> String
-    prepend miss ls = miss ++ '\n' : ls
+    takeLast files =
+      case mlast of
+        Nothing -> files
+        Just ie ->
+          case dropWhileEnd (> showFile ie) files of
+            [] -> []
+            lf ->
+              case ie of
+                Include _ -> lf
+                Exclude e ->
+                  case unsnoc lf of
+                    Nothing -> []
+                    Just (ls,l) ->
+                      if l == NE.toList e then ls else lf
 
-    takeUntil :: Maybe (String,Bool) -> [String] -> [String]
-    takeUntil Nothing es = es
-    takeUntil (Just _) [] = []
-    takeUntil (Just (until',exists)) es =
-      case dropWhileEnd (until' /=) es of
-        [] -> []
-        es' ->
-          (if before || not exists then init else id) es'
+    renderDir =
+      case fst . mdirfile <$> mstart of
+        Just (Just dir) -> dir
+        _ -> ""
