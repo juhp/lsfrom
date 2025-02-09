@@ -1,9 +1,10 @@
 module Main (main) where
 
+import Control.Monad.Extra (unless, when, whenJust)
 import Data.List.Extra (dropWhileEnd, unsnoc)
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (maybeToList)
-import SimpleCmd (cmdLines)
+import SimpleCmd (cmdLines, error', (+-+))
 import SimpleCmdArgs
 import System.FilePath
 
@@ -24,9 +25,9 @@ main :: IO ()
 main =
   simpleCmdArgs (Just version) "List directories files starting from file"
   "lsfrom lists the files in a directory that follow from the given file" $
-  lsfrom False
---  <$> switchWith 's' "strict" "fail if specified file(s) do not exist"
-  <$> switchWith 'A' "all" "include hidden (dot) files"
+  lsfrom
+  <$> switchWith 's' "strict" "fail if specified file(s) do not exist"
+  <*> switchWith 'A' "all" "include hidden (dot) files"
   <*> optional
   (Include <$> optionWith (maybeReader readNonEmpty) 'f' "from" "STARTFILE" "files from STARTFILE" <|>
    Exclude <$> optionWith (maybeReader readNonEmpty) 'a' "after" "STARTFILE" "files after STARTFILE")
@@ -41,13 +42,16 @@ main =
 
     readNonEmpty = NE.nonEmpty . removeTrailing
 
--- FIXME make strict mean existence?
 lsfrom :: Bool -> Bool -> Maybe (IncludeExclude NEString)
        -> Maybe (IncludeExclude NEString) -> IO ()
-lsfrom _strict hidden mstart mlast = do
+lsfrom strict hidden mstart mlast = do
   let dirarg = maybe [] (maybeToList . fst . mdirfile) mstart
       showhidden = hidden || fmap (NE.head . unIncludeExclue) mstart == Just '.'
   listing <- cmdLines "ls" $ ["-A" | showhidden] ++ dirarg
+  when strict $ do
+    whenJust mstart $ \start ->
+      unless (showFile start `elem` listing) $
+        error' $ showFile start +-+ "does not exist"
   let result = takeLast $ dropStart listing
   mapM_ (putStrLn . (renderDir </>)) result
   where

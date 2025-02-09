@@ -29,7 +29,7 @@ tests =
   , ("test/files", ["-b", "B", "-f", "B"], [])
   , ("test/files", ["-u", "B", "-a", "B"], [])
   , ("test/files", ["-b", "B", "-a", "B"], [])
---  , ("test/files", ["-s", "-u", "B", "-f", "A"], ["A", "B"])
+  , ("test/files", ["-s", "-u", "B", "-f", "A"], ["A", "B"])
   ]
 
 main :: IO ()
