@@ -29,18 +29,19 @@ main =
   <$> switchWith 's' "strict" "fail if specified file(s) do not exist"
   <*> switchWith 'A' "all" "include hidden (dot) files"
   <*> optional
-  (Include <$> optionWith (maybeReader readNonEmpty) 'f' "from" "STARTFILE" "files from STARTFILE" <|>
-   Exclude <$> optionWith (maybeReader readNonEmpty) 'a' "after" "STARTFILE" "files after STARTFILE")
+  (Include <$> optNonEmpty 'f' "from" "STARTFILE" "files from STARTFILE" <|>
+   Exclude <$> optNonEmpty 'a' "after" "STARTFILE" "files after STARTFILE")
   <*> optional
-  (Include <$> optionWith (maybeReader readNonEmpty) 'u' "until" "LASTFILE" "files until LASTFILE" <|>
-   Exclude <$> optionWith (maybeReader readNonEmpty) 'b' "before" "LASTFILE" "files before LASTFILE")
+  (Include <$> optNonEmpty 'u' "until" "LASTFILE" "files until LASTFILE" <|>
+   Exclude <$> optNonEmpty 'b' "before" "LASTFILE" "files before LASTFILE")
   where
-    removeTrailing f =
-      if f == "/"
-      then "/"
-      else dropWhileEnd (== '/') f
-
-    readNonEmpty = NE.nonEmpty . removeTrailing
+    optNonEmpty =
+      let readNonEmpty = NE.nonEmpty . removeTrailing
+          removeTrailing f =
+            if f == "/"
+            then "/"
+            else dropWhileEnd (== '/') f
+      in optionWith (maybeReader readNonEmpty)
 
 lsfrom :: Bool -> Bool -> Maybe (IncludeExclude NEString)
        -> Maybe (IncludeExclude NEString) -> IO ()
