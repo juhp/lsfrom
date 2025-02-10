@@ -39,6 +39,7 @@ main =
   where
     optNonEmpty =
       let readNonEmpty = NE.nonEmpty . removeTrailing
+          removeTrailing "" = error' "empty filename not allowed"
           removeTrailing f =
             if f == "/"
             then "/"
