@@ -4,7 +4,7 @@ import Control.Monad.Extra (filterM, unless, when, whenJust)
 import Data.List.Extra (dropWhileEnd, unsnoc)
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (isNothing, maybeToList)
-import SimpleCmd (cmdLines, error', (+-+))
+import SimpleCmd (cmdLines, error', warning, (+-+))
 import SimpleCmdArgs
 import System.Directory (doesDirectoryExist, doesFileExist)
 import System.FilePath
@@ -55,9 +55,6 @@ main =
 lsfrom :: Bool -> Bool -> Maybe Only -> Maybe (IncludeExclude NEString)
        -> Maybe (IncludeExclude NEString) -> IO ()
 lsfrom strict hidden monly mstart mlast = do
-  -- required for correct C collation (before below)
-  mlocale <- setLocale LC_COLLATE $ Just "" -- use default locale
-  when (isNothing mlocale) $ error' "failed to setlocale"
   let dirarg = maybe [] (maybeToList . fst . mdirfile) mstart
       showhidden = hidden || fmap (NE.head . unIncludeExclue) mstart == Just '.'
   listing <- cmdLines "ls" (["-A" | showhidden] ++ dirarg) >>= filterTypes
@@ -68,6 +65,9 @@ lsfrom strict hidden monly mstart mlast = do
     whenJust mlast $ \lst ->
       unless (showFile lst `elem` listing) $
       error' $ showFile lst +-+ "does not exist"
+  -- set collation for current locale
+  mlocale <- setLocale LC_COLLATE $ Just ""
+  when (isNothing mlocale) $ warning "setlocale failed"
   let result = takeLast $ dropStart listing -- uses LC_COLLATE
   mapM_ (putStrLn . (renderDir </>)) result
   where
