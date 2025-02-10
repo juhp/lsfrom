@@ -65,6 +65,9 @@ lsfrom strict hidden monly mstart mlast = do
     whenJust mstart $ \start ->
       unless (showFile start `elem` listing) $
       error' $ showFile start +-+ "does not exist"
+    whenJust mlast $ \lst ->
+      unless (showFile lst `elem` listing) $
+      error' $ showFile lst +-+ "does not exist"
   let result = takeLast $ dropStart listing -- uses LC_COLLATE
   mapM_ (putStrLn . (renderDir </>)) result
   where
