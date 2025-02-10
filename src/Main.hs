@@ -15,14 +15,14 @@ import Paths_lsfrom (version)
 
 data IncludeExclude a = Include a | Exclude a
 
-unIncludeExclue :: IncludeExclude a -> a
-unIncludeExclue (Include x) = x
-unIncludeExclue (Exclude x) = x
+unInclExcl :: IncludeExclude a -> a
+unInclExcl (Include x) = x
+unInclExcl (Exclude x) = x
 
 type NEString = NE.NonEmpty Char
 
 showFile :: IncludeExclude NEString -> String
-showFile = NE.toList . unIncludeExclue
+showFile = NE.toList . unInclExcl
 
 data Only = OnlyDirs | OnlyFiles
 
@@ -56,7 +56,7 @@ lsfrom :: Bool -> Bool -> Maybe Only -> Maybe (IncludeExclude NEString)
        -> Maybe (IncludeExclude NEString) -> IO ()
 lsfrom strict hidden monly mstart mlast = do
   let dirarg = maybe [] (maybeToList . fst . mdirfile) mstart
-      showhidden = hidden || fmap (NE.head . unIncludeExclue) mstart == Just '.'
+      showhidden = hidden || fmap (NE.head . unInclExcl) mstart == Just '.'
   listing <- cmdLines "ls" (["-A" | showhidden] ++ dirarg) >>= filterTypes
   when strict $ do
     whenJust mstart $ \start ->
