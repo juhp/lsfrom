@@ -4,10 +4,9 @@ version:             2.0
 synopsis:            List directory files starting from a specific name
 description:
             `lsfrom` lists the entries of a directory starting from
-            a particular file in locale collation order.
-
-            This can be useful for example for continuing a command or script
-            in a directory after a failure.
+            a particular file in locale collation order, which
+            can be useful for continuing a shell command or script
+            after a failure on an entry.
 license:             BSD3
 license-file:        LICENSE
 author:              Jens Petersen <petersen@redhat.com>
