@@ -75,8 +75,8 @@ lsfrom strict hidden monly mstart mlast = do
     mdirfile ie =
         case splitFileName $ showFile ie of
           (d,f) ->
-            let mdir = if d == "./" then Nothing else Just d
-            in (mdir,f)
+            let md = if d == "./" then Nothing else Just d
+            in (md,f)
 
     filterTypes :: [String] -> IO [String]
     filterTypes =
