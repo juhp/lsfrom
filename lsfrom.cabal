@@ -1,6 +1,6 @@
 cabal-version:       2.0
 name:                lsfrom
-version:             1.1
+version:             2.0
 synopsis:            List directory files starting from a specific name
 description:
             `lsfrom` lists the entries of a directory starting from
@@ -28,12 +28,15 @@ source-repository head
   location:            https://github.com/juhp/lsfrom.git
 
 executable lsfrom
-  main-is:             src/Main.hs
-  other-modules:       Paths_lsfrom
+  hs-source-dirs:      src
+  main-is:             Main.hs
+  other-modules:       Collate
+                       Paths_lsfrom
   autogen-modules:     Paths_lsfrom
   build-depends:       base < 5,
                        extra,
                        filepath,
+                       setlocale,
                        simple-cmd >= 0.1.1,
                        simple-cmd-args >= 0.1.7
   default-language:    Haskell2010
@@ -61,7 +64,7 @@ test-suite test
 
   ghc-options:   -Wall
   build-depends: base >= 4 && < 5
-               , directory >= 1.2.3.0
                , filepath
+               , process
                , simple-cmd >= 0.1.1
   build-tool-depends:   lsfrom:lsfrom

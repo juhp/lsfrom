@@ -1,8 +1,9 @@
 # Release history for lsfrom
 
-## 1.1 (2025-02-10)
+## 2.0 (2025-02-10)
 - major rewrite introducing --from file option
 - --after, --until, --before are also file options
+- uses locale collation with C FFI
 
 ## 1.0 (2024-01-07)
 - add --after: start with the next file after the specified one

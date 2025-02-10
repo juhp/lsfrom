@@ -3,11 +3,13 @@ module Main (main) where
 import Control.Monad.Extra (unless, when, whenJust)
 import Data.List.Extra (dropWhileEnd, unsnoc)
 import qualified Data.List.NonEmpty as NE
-import Data.Maybe (maybeToList)
+import Data.Maybe (isNothing, maybeToList)
 import SimpleCmd (cmdLines, error', (+-+))
 import SimpleCmdArgs
 import System.FilePath
+import System.Locale.SetLocale (setLocale, Category(LC_COLLATE))
 
+import Collate (beforeUnsafe)
 import Paths_lsfrom (version)
 
 data IncludeExclude a = Include a | Exclude a
@@ -46,14 +48,17 @@ main =
 lsfrom :: Bool -> Bool -> Maybe (IncludeExclude NEString)
        -> Maybe (IncludeExclude NEString) -> IO ()
 lsfrom strict hidden mstart mlast = do
+  -- required for correct C collation (before below)
+  mlocale <- setLocale LC_COLLATE $ Just "" -- use default locale
+  when (isNothing mlocale) $ error' "failed to setlocale"
   let dirarg = maybe [] (maybeToList . fst . mdirfile) mstart
       showhidden = hidden || fmap (NE.head . unIncludeExclue) mstart == Just '.'
   listing <- cmdLines "ls" $ ["-A" | showhidden] ++ dirarg
   when strict $ do
     whenJust mstart $ \start ->
       unless (showFile start `elem` listing) $
-        error' $ showFile start +-+ "does not exist"
-  let result = takeLast $ dropStart listing
+      error' $ showFile start +-+ "does not exist"
+  let result = takeLast $ dropStart listing -- uses LC_COLLATE
   mapM_ (putStrLn . (renderDir </>)) result
   where
     mdirfile :: IncludeExclude NEString -> (Maybe FilePath, FilePath)
@@ -70,7 +75,7 @@ lsfrom strict hidden mstart mlast = do
         Just start ->
           case mdirfile start of
             (_,file) ->
-              case dropWhile (< file) files of
+              case dropWhile (`beforeUnsafe` file) files of
                 [] -> []
                 sf@(f:fs) ->
                   case start of
@@ -81,7 +86,7 @@ lsfrom strict hidden mstart mlast = do
       case mlast of
         Nothing -> files
         Just ie ->
-          case dropWhileEnd (> showFile ie) files of
+          case dropWhileEnd (showFile ie `beforeUnsafe`) files of
             [] -> []
             lf ->
               case ie of
