@@ -1,11 +1,12 @@
 module Main (main) where
 
-import Control.Monad.Extra (unless, when, whenJust)
+import Control.Monad.Extra (filterM, unless, when, whenJust)
 import Data.List.Extra (dropWhileEnd, unsnoc)
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (isNothing, maybeToList)
 import SimpleCmd (cmdLines, error', (+-+))
 import SimpleCmdArgs
+import System.Directory (doesDirectoryExist, doesFileExist)
 import System.FilePath
 import System.Locale.SetLocale (setLocale, Category(LC_COLLATE))
 
@@ -23,6 +24,8 @@ type NEString = NE.NonEmpty Char
 showFile :: IncludeExclude NEString -> String
 showFile = NE.toList . unIncludeExclue
 
+data Only = OnlyDirs | OnlyFiles
+
 main :: IO ()
 main =
   simpleCmdArgs (Just version) "List directories files starting from file"
@@ -30,6 +33,9 @@ main =
   lsfrom
   <$> switchWith 's' "strict" "fail if specified file(s) do not exist"
   <*> switchWith 'A' "all" "include hidden (dot) files"
+  <*> optional
+  (flagLongWith' OnlyDirs "dirs" "Only list directories" <|>
+   flagLongWith' OnlyFiles "files" "Only list files")
   <*> optional
   (Include <$> optNonEmpty 'f' "from" "STARTFILE" "files from STARTFILE" <|>
    Exclude <$> optNonEmpty 'a' "after" "STARTFILE" "files after STARTFILE")
@@ -46,15 +52,15 @@ main =
             else dropWhileEnd (== '/') f
       in optionWith (maybeReader readNonEmpty)
 
-lsfrom :: Bool -> Bool -> Maybe (IncludeExclude NEString)
+lsfrom :: Bool -> Bool -> Maybe Only -> Maybe (IncludeExclude NEString)
        -> Maybe (IncludeExclude NEString) -> IO ()
-lsfrom strict hidden mstart mlast = do
+lsfrom strict hidden monly mstart mlast = do
   -- required for correct C collation (before below)
   mlocale <- setLocale LC_COLLATE $ Just "" -- use default locale
   when (isNothing mlocale) $ error' "failed to setlocale"
   let dirarg = maybe [] (maybeToList . fst . mdirfile) mstart
       showhidden = hidden || fmap (NE.head . unIncludeExclue) mstart == Just '.'
-  listing <- cmdLines "ls" $ ["-A" | showhidden] ++ dirarg
+  listing <- cmdLines "ls" (["-A" | showhidden] ++ dirarg) >>= filterTypes
   when strict $ do
     whenJust mstart $ \start ->
       unless (showFile start `elem` listing) $
@@ -68,6 +74,15 @@ lsfrom strict hidden mstart mlast = do
           (d,f) ->
             let mdir = if d == "./" then Nothing else Just d
             in (mdir,f)
+
+    filterTypes :: [String] -> IO [String]
+    filterTypes =
+      case monly of
+        Nothing -> return
+        Just o ->
+          case o of
+            OnlyDirs -> filterM doesDirectoryExist
+            OnlyFiles -> filterM doesFileExist
 
     dropStart :: [FilePath] -> [FilePath]
     dropStart files =

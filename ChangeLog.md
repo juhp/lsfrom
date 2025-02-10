@@ -4,6 +4,7 @@
 - major rewrite introducing --from file option
 - --after, --until, --before are also file options
 - uses locale collation with C FFI
+- add --dirs and --files file-type filters
 
 ## 1.0 (2024-01-07)
 - add --after: start with the next file after the specified one

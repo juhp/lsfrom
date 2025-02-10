@@ -1,3 +1,0 @@
-resolver: lts-16.31
-extra-deps:
-  - simple-cmd-args-0.1.7
