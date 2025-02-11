@@ -21,6 +21,10 @@ extra-doc-files:     ChangeLog.md
 extra-source-files:  test/files/A
                      test/files/B
                      test/files/C
+                     test/cases/A
+                     test/cases/B
+                     test/cases/a
+                     test/cases/b
 
 source-repository head
   type:                git
