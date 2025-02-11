@@ -1,30 +1,31 @@
 {-# LANGUAGE CPP #-}
 
-import Control.Monad (unless)
-import SimpleCmd (cmdN, error')
+import Control.Monad (unless, when)
+import SimpleCmd (cmdLines, cmdN, error')
 import System.IO (hGetContents)
 import System.Process (CreateProcess(..), StdStream(CreatePipe),
                        proc, withCreateProcess)
 
 type Test = (Maybe String, FilePath, [String], [String])
 
-lsfrom :: Test -> IO ()
-lsfrom (mlocale, dir, args, expect) = do
-  let menv = mlocale >>= \l -> Just [("LC_ALL",l)]
-  withCreateProcess
-    (proc "lsfrom" args)
-    { cwd = Just dir, env = menv, std_out = CreatePipe } $
-    \ _si mso _se _p ->
-      case mso of
-        Nothing -> error "no stdout handle found"
-        Just so -> do
-          out <- hGetContents so
-          unless (lines out == expect) $ do
-            print mlocale
-            cmdN "lsfrom" args
-            putStrLn $ "returned> " ++ show out
-            putStrLn $ "expected> " ++ show expect
-            error' "failed"
+lsfrom :: [String] -> Test -> IO ()
+lsfrom locales (mlocale, dir, args, expect) = do
+  when (maybe True (`elem` locales) mlocale) $ do
+    let menv = mlocale >>= \l -> Just [("LC_ALL",l)]
+    withCreateProcess
+      (proc "lsfrom" args)
+      { cwd = Just dir, env = menv, std_out = CreatePipe } $
+      \ _si mso _se _p ->
+        case mso of
+          Nothing -> error "no stdout handle found"
+          Just so -> do
+            out <- hGetContents so
+            unless (lines out == expect) $ do
+              print mlocale
+              cmdN "lsfrom" args
+              putStrLn $ "returned> " ++ show out
+              putStrLn $ "expected> " ++ show expect
+              error' "failed"
 
 tests :: [Test]
 tests =
@@ -47,7 +48,8 @@ tests =
 
 main :: IO ()
 main = do
-  mapM_ lsfrom tests
+  locales <- cmdLines "locale" ["-a"]
+  mapM_ (lsfrom locales) tests
   putStrLn $ show (length tests) ++ " tests run"
 
 #if !MIN_VERSION_simple_cmd(0,1,4)
