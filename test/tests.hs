@@ -19,8 +19,8 @@ lsfrom locales (mlocale, dir, args, expect) = do
         case mso of
           Nothing -> error "no stdout handle found"
           Just so -> do
-            out <- hGetContents so
-            unless (lines out == expect) $ do
+            out <- lines <$> hGetContents so
+            unless (out == expect) $ do
               print mlocale
               cmdN "lsfrom" args
               putStrLn $ "returned> " ++ show out
