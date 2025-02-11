@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 
-import Control.Monad (unless, when)
-import SimpleCmd (cmdLines, cmdN, error')
+import Control.Monad.Extra (unless, whenJust)
+import SimpleCmd (cmdLines, cmdN, error', (+-+))
 import System.IO (hGetContents)
 import System.Process (CreateProcess(..), StdStream(CreatePipe),
                        proc, withCreateProcess)
@@ -10,7 +10,8 @@ type Test = (Maybe String, FilePath, [String], [String])
 
 lsfrom :: [String] -> Test -> IO ()
 lsfrom locales (mlocale, dir, args, expect) = do
-  when (maybe True (`elem` locales) mlocale) $ do
+  if maybe True (`elem` locales) mlocale
+    then do
     let menv = mlocale >>= \l -> Just [("LC_ALL",l)]
     withCreateProcess
       (proc "lsfrom" args)
@@ -23,9 +24,10 @@ lsfrom locales (mlocale, dir, args, expect) = do
             unless (out == expect) $ do
               print mlocale
               cmdN "lsfrom" args
-              putStrLn $ "returned> " ++ show out
-              putStrLn $ "expected> " ++ show expect
+              putStrLn $ "returned>" +-+ show out
+              putStrLn $ "expected>" +-+ show expect
               error' "failed"
+    else whenJust mlocale $ putStrLn . ("locale skipped:" +-+)
 
 tests :: [Test]
 tests =
@@ -42,15 +44,16 @@ tests =
   , (Nothing, "test/files", ["-b", "B", "-a", "B"], [])
   , (Nothing, "test/files", ["-s", "-u", "B", "-f", "A"], ["A", "B"])
   , (Just "C", "test/cases", [], ["A", "B", "a", "b"])
+  -- encodings must be lowercase ".utf8" to be detected
   , (Just "ja_JP.utf8", "test/cases", [], ["A", "B", "a", "b"])
-  , (Just "en_US.UTF-8", "test/cases", [], ["a", "A", "b", "B"])
+  , (Just "en_US.utf8", "test/cases", [], ["a", "A", "b", "B"])
   ]
 
 main :: IO ()
 main = do
   locales <- cmdLines "locale" ["-a"]
   mapM_ (lsfrom locales) tests
-  putStrLn $ show (length tests) ++ " tests run"
+  putStrLn $ show (length tests) +-+ "tests run"
 
 #if !MIN_VERSION_simple_cmd(0,1,4)
 error' :: String -> a
